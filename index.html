@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Raleway:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Raleway', sans-serif;
+            overflow: hidden;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+        #bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.18);
+            z-index: 0;
+        }
+
+        /* ── HOME PAGE ── */
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 36px;
+            width: 100%;
+            max-width: 780px;
+            padding: 40px 24px;
+            transition: opacity 0.4s, transform 0.4s;
+        }
+
+        .container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.97);
+        }
+
+        .title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(72px, 12vw, 120px);
+            font-weight: 300;
+            letter-spacing: 0.22em;
+            color: rgba(255, 255, 255, 0.92);
+            text-shadow: 0 2px 40px rgba(160, 200, 255, 0.20);
+            user-select: none;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 18px 28px;
+            font-size: 18px;
+            font-family: 'Raleway', sans-serif;
+            border: 1.5px solid rgba(255, 255, 255, 0.30);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.88);
+            outline: none;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .search-bar::placeholder { color: rgba(255, 255, 255, 0.45); }
+        .search-bar:focus {
+            border-color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-circles {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.30);
+            background: rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.85);
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            user-select: none;
+        }
+
+        .nav-circle:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.50);
+        }
+
+        .enter-btn {
+            padding: 20px 64px;
+            font-size: 15px;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            border: 1.5px solid rgba(255, 255, 255, 0.30);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            cursor: default;
+            transition: background 0.2s, border-color 0.2s;
+            user-select: none;
+        }
+
+        .enter-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.50);
+        }
+
+        /* ── CALENDAR PAGE ── */
+        .calendar-page {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 36px 20px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(16px);
+            transition: opacity 0.4s, transform 0.4s;
+            overflow: hidden;
+        }
+
+        .calendar-page.visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .cal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .cal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .cal-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .cal-nav button {
+            background: rgba(255,255,255,0.10);
+            border: 1.5px solid rgba(255,255,255,0.28);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            color: rgba(255,255,255,0.85);
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            backdrop-filter: blur(8px);
+        }
+
+        .cal-nav button:hover { background: rgba(255,255,255,0.20); }
+
+        .cal-month-label {
+            font-size: 17px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.85);
+            min-width: 160px;
+            text-align: center;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.10);
+            border: 1.5px solid rgba(255,255,255,0.28);
+            border-radius: 10px;
+            padding: 8px 20px;
+            color: rgba(255,255,255,0.80);
+            font-family: 'Raleway', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover { background: rgba(255,255,255,0.20); }
+
+        .cal-grid-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.14);
+            border-radius: 18px;
+            backdrop-filter: blur(14px);
+            overflow: hidden;
+        }
+
+        .cal-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            flex-shrink: 0;
+        }
+
+        .cal-weekday {
+            padding: 10px 0;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
+        }
+
+        .cal-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: 1fr;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .cal-day {
+            border-right: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .cal-day:hover { background: rgba(255,255,255,0.07); }
+        .cal-day:nth-child(7n) { border-right: none; }
+
+        .cal-day.other-month .day-num { color: rgba(255,255,255,0.22); }
+
+        .cal-day.today .day-num {
+            background: rgba(160,200,255,0.30);
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .day-num {
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.75);
+            flex-shrink: 0;
+        }
+
+        .event-chip {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(160,200,255,0.25);
+            color: rgba(255,255,255,0.88);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .event-chip:hover { background: rgba(160,200,255,0.40); }
+
+        /* ── EVENT MODAL ── */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            background: rgba(0,0,0,0.40);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+
+        .modal-backdrop.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: rgba(30,40,60,0.75);
+            backdrop-filter: blur(24px);
+            border: 1.5px solid rgba(255,255,255,0.20);
+            border-radius: 20px;
+            padding: 32px 36px;
+            width: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            transform: translateY(12px);
+            transition: transform 0.25s;
+        }
+
+        .modal-backdrop.visible .modal { transform: translateY(0); }
+
+        .modal h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            font-size: 26px;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.90);
+        }
+
+        .modal label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.50);
+        }
+
+        .modal input {
+            font-family: 'Raleway', sans-serif;
+            font-size: 15px;
+            padding: 10px 14px;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.88);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .modal input:focus { border-color: rgba(160,200,255,0.55); }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        .modal-actions button {
+            font-family: 'Raleway', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.10em;
+            padding: 10px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.65);
+        }
+
+        .btn-cancel:hover { background: rgba(255,255,255,0.08); }
+
+        .btn-save {
+            background: rgba(160,200,255,0.22);
+            border: 1.5px solid rgba(160,200,255,0.40);
+            color: rgba(255,255,255,0.92);
+        }
+
+        .btn-save:hover { background: rgba(160,200,255,0.36); }
+
+        .btn-delete {
+            background: rgba(255,120,120,0.18);
+            border: 1.5px solid rgba(255,120,120,0.35);
+            color: rgba(255,180,180,0.90);
+            margin-right: auto;
+        }
+
+        .btn-delete:hover { background: rgba(255,120,120,0.32); }
+
+        /* ── NOTES PAGE ── */
+        .notes-page {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 36px 20px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(16px);
+            transition: opacity 0.4s, transform 0.4s;
+            overflow: hidden;
+        }
+
+        .notes-page.visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .notes-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .notes-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .notes-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.14);
+            border-radius: 18px;
+            backdrop-filter: blur(14px);
+            padding: 20px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .note-item {
+            background: rgba(255,255,255,0.08);
+            border: 1.5px solid rgba(255,255,255,0.16);
+            border-radius: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .note-item:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(160,200,255,0.40);
+        }
+
+        .note-item-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .note-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.90);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .note-item-preview {
+            font-size: 12px;
+            color: rgba(255,255,255,0.50);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .new-note-btn {
+            background: rgba(160,200,255,0.22);
+            border: 1.5px solid rgba(160,200,255,0.40);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.90);
+            font-family: 'Raleway', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.10em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .new-note-btn:hover { background: rgba(160,200,255,0.36); }
+
+        /* ── NOTE EDITOR MODAL ── */
+        .note-editor-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 11;
+            background: rgba(0,0,0,0.50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+
+        .note-editor-backdrop.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .note-editor {
+            background: rgba(30,40,60,0.85);
+            backdrop-filter: blur(24px);
+            border: 1.5px solid rgba(255,255,255,0.20);
+            border-radius: 20px;
+            padding: 32px 36px;
+            width: 90%;
+            max-width: 500px;
+            height: 80vh;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            transform: translateY(12px) scale(0.95);
+            transition: transform 0.25s;
+        }
+
+        .note-editor-backdrop.visible .note-editor { transform: translateY(0) scale(1); }
+
+        .note-editor h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300;
+            font-size: 26px;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.90);
+        }
+
+        .note-editor-form {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .note-editor label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.50);
+        }
+
+        .note-editor input[type="text"] {
+            font-family: 'Raleway', sans-serif;
+            font-size: 15px;
+            padding: 10px 14px;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.88);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .note-editor input[type="text"]:focus { border-color: rgba(160,200,255,0.55); }
+
+        .note-editor textarea {
+            font-family: 'Raleway', sans-serif;
+            font-size: 14px;
+            padding: 12px 14px;
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.88);
+            outline: none;
+            transition: border-color 0.2s;
+            resize: none;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .note-editor textarea:focus { border-color: rgba(160,200,255,0.55); }
+
+        .note-editor-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .note-editor-actions button {
+            font-family: 'Raleway', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.10em;
+            padding: 10px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        /* ── CROSSY ROAD PAGE ── */
+        .game-page {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(16px);
+            transition: opacity 0.4s, transform 0.4s;
+            padding: 20px;
+        }
+
+        .game-page.visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0);
+        }
+
+        .game-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .game-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        #game-canvas {
+            border: 2px solid rgba(255, 255, 255, 0.30);
+            border-radius: 12px;
+            background: #1a1a2e;
+            display: block;
+            image-rendering: pixelated;
+            cursor: none;
+        }
+
+        .game-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(30, 40, 60, 0.70);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(255, 255, 255, 0.20);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 14px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .game-info-label {
+            font-size: 11px;
+            letter-spacing: 0.10em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.50);
+        }
+
+        .game-info-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: rgba(160, 200, 255, 0.90);
+        }
+
+        .game-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 40, 60, 0.70);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(255, 255, 255, 0.20);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: rgba(255, 255, 255, 0.70);
+            font-size: 12px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .game-over-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.60);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 12;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .game-over-modal.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .game-over-content {
+            background: rgba(30, 40, 60, 0.90);
+            backdrop-filter: blur(24px);
+            border: 1.5px solid rgba(255, 255, 255, 0.20);
+            border-radius: 20px;
+            padding: 40px 50px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-over-content h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            color: rgba(255, 100, 100, 0.90);
+        }
+
+        .game-over-content p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .game-over-score {
+            font-size: 32px;
+            font-weight: 500;
+            color: rgba(160, 200, 255, 0.90);
+        }
+
+        .game-over-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .game-over-buttons button {
+            font-family: 'Raleway', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.10em;
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1.5px solid;
+        }
+
+        .game-restart-btn {
+            background: rgba(160, 200, 255, 0.22);
+            border-color: rgba(160, 200, 255, 0.40);
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .game-restart-btn:hover { background: rgba(160, 200, 255, 0.36); }
+
+        .game-home-btn {
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.22);
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .game-home-btn:hover { background: rgba(255, 255, 255, 0.08); }
+    </style>
+</head>
+<body>
+    <video id="bg-video" autoplay muted loop playsinline>
+        <source src="Nimbus_video.mp4" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
+
+    <!-- HOME -->
+    <div class="container" id="home">
+        <h1 class="title">LIFE</h1>
+        <input class="search-bar" type="text" placeholder="Search notes...">
+        <div class="nav-circles">
+            <div class="nav-circle" id="games-btn">Games</div>
+            <div class="nav-circle" id="notes-btn">Notes</div>
+            <div class="nav-circle" id="schedule-btn">Schedule</div>
+        </div>
+        <div style="position: absolute; bottom: 40px; font-size: 12px; letter-spacing: 0.06em; color: rgba(255,255,255,0.40); text-transform: uppercase;" id="game-list">↓ Pong</div>
+        <button class="enter-btn">Enter the Workspace</button>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="calendar-page" id="calendar-page">
+        <div class="cal-header">
+            <div class="cal-title">Schedule</div>
+            <div class="cal-nav">
+                <button id="prev-month">&#8249;</button>
+                <span class="cal-month-label" id="month-label"></span>
+                <button id="next-month">&#8250;</button>
+            </div>
+            <button class="back-btn" id="back-btn">&#8592; Back</button>
+        </div>
+        <div class="cal-grid-wrapper">
+            <div class="cal-weekdays">
+                <div class="cal-weekday">Sun</div>
+                <div class="cal-weekday">Mon</div>
+                <div class="cal-weekday">Tue</div>
+                <div class="cal-weekday">Wed</div>
+                <div class="cal-weekday">Thu</div>
+                <div class="cal-weekday">Fri</div>
+                <div class="cal-weekday">Sat</div>
+            </div>
+            <div class="cal-days" id="cal-days"></div>
+        </div>
+    </div>
+
+    <!-- NOTES PAGE -->
+    <div class="notes-page" id="notes-page">
+        <div class="notes-header">
+            <div class="notes-title">Notes</div>
+            <div style="display: flex; gap: 12px;">
+                <button class="new-note-btn" id="new-note-btn">+ New Note</button>
+                <button class="back-btn" id="notes-back-btn">&#8592; Back</button>
+            </div>
+        </div>
+        <div class="notes-list" id="notes-list"></div>
+    </div>
+
+    <!-- EVENT MODAL -->
+    <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal">
+            <h2 id="modal-title">Add Event</h2>
+            <label>Event name
+                <input type="text" id="event-name" placeholder="e.g. Team meeting">
+            </label>
+            <label>Date
+                <input type="date" id="event-date">
+            </label>
+            <label>Start time
+                <input type="time" id="event-start">
+            </label>
+            <label>End time
+                <input type="time" id="event-end">
+            </label>
+            <div class="modal-actions">
+                <button class="btn-delete" id="btn-delete" style="display:none">Delete</button>
+                <button class="btn-cancel" id="btn-cancel">Cancel</button>
+                <button class="btn-save" id="btn-save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PONG GAME -->
+    <div class="game-page" id="game-page">
+        <div class="game-header">
+            <div class="game-title">Pong</div>
+            <button class="back-btn" id="game-back-btn">&#8592; Back</button>
+        </div>
+        <canvas id="game-canvas" width="600" height="400"></canvas>
+        <div class="game-info">
+            <div style="display: flex; gap: 40px;">
+                <div>
+                    <div class="game-info-label">You</div>
+                    <div class="game-info-value" id="game-score-player">0</div>
+                </div>
+                <div>
+                    <div class="game-info-label">AI</div>
+                    <div class="game-info-value" id="game-score-ai">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="game-controls">Use ↑ ↓ or W/S to move | Space to start</div>
+    </div>
+
+    <div class="game-over-modal" id="game-over-modal">
+        <div class="game-over-content">
+            <h2 id="game-result-title">You Won!</h2>
+            <p id="game-result-text">You beat the AI</p>
+            <div class="game-over-score"><span id="game-score-final">0</span> - <span id="game-ai-score-final">0</span></div>
+            <div class="game-over-buttons">
+                <button class="game-restart-btn" id="game-restart-btn">Play Again</button>
+                <button class="game-home-btn" id="game-home-btn">Back to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTE EDITOR MODAL -->
+    <div class="note-editor-backdrop" id="note-editor-backdrop">
+        <div class="note-editor">
+            <h2 id="note-editor-title">New Note</h2>
+            <div class="note-editor-form">
+                <label>Note title
+                    <input type="text" id="note-title" placeholder="e.g. Project ideas">
+                </label>
+                <label>Content
+                    <textarea id="note-content" placeholder="Write your note here..."></textarea>
+                </label>
+            </div>
+            <div class="note-editor-actions">
+                <button class="btn-delete" id="note-btn-delete" style="display:none">Delete</button>
+                <button class="btn-cancel" id="note-btn-cancel">Cancel</button>
+                <button class="btn-save" id="note-btn-save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL STATE
+        const home = document.getElementById('home');
+        const calPage = document.getElementById('calendar-page');
+        const scheduleBtn = document.getElementById('schedule-btn');
+        const backBtn = document.getElementById('back-btn');
+        const gamesBtn = document.getElementById('games-btn');
+        const gamePage = document.getElementById('game-page');
+        const gameBackBtn = document.getElementById('game-back-btn');
+        const calDays = document.getElementById('cal-days');
+        const monthLabel = document.getElementById('month-label');
+        const modal = document.getElementById('modal-backdrop');
+        const eventNameInput = document.getElementById('event-name');
+        const eventDateInput = document.getElementById('event-date');
+        const eventStartInput = document.getElementById('event-start');
+        const eventEndInput = document.getElementById('event-end');
+        const btnSave = document.getElementById('btn-save');
+        const btnCancel = document.getElementById('btn-cancel');
+        const btnDelete = document.getElementById('btn-delete');
+        const modalTitle = document.getElementById('modal-title');
+
+        let current = new Date();
+        let events = JSON.parse(localStorage.getItem('life-events') || '[]');
+        let editingIndex = null;
+        let pendingDate = null;
+
+        const MONTHS = ['January','February','March','April','May','June',
+                        'July','August','September','October','November','December'];
+
+        scheduleBtn.addEventListener('click', () => {
+            home.classList.add('hidden');
+            calPage.classList.add('visible');
+            renderCalendar();
+        });
+
+        backBtn.addEventListener('click', () => {
+            calPage.classList.remove('visible');
+            home.classList.remove('hidden');
+        });
+
+        document.getElementById('prev-month').addEventListener('click', () => {
+            current.setMonth(current.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('next-month').addEventListener('click', () => {
+            current.setMonth(current.getMonth() + 1);
+            renderCalendar();
+        });
+
+        function saveEvents() {
+            localStorage.setItem('life-events', JSON.stringify(events));
+        }
+
+        function toDateKey(y, m, d) {
+            return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        }
+
+        function renderCalendar() {
+            const year = current.getFullYear();
+            const month = current.getMonth();
+            monthLabel.textContent = `${MONTHS[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrev = new Date(year, month, 0).getDate();
+            const today = new Date();
+
+            calDays.innerHTML = '';
+
+            const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-day';
+
+                let cellDate, isOther = false;
+                if (i < firstDay) {
+                    cellDate = new Date(year, month - 1, daysInPrev - firstDay + 1 + i);
+                    isOther = true;
+                } else if (i >= firstDay + daysInMonth) {
+                    cellDate = new Date(year, month + 1, i - firstDay - daysInMonth + 1);
+                    isOther = true;
+                } else {
+                    cellDate = new Date(year, month, i - firstDay + 1);
+                }
+
+                if (isOther) cell.classList.add('other-month');
+
+                const y = cellDate.getFullYear();
+                const m = cellDate.getMonth();
+                const d = cellDate.getDate();
+                const key = toDateKey(y, m, d);
+
+                if (y === today.getFullYear() && m === today.getMonth() && d === today.getDate()) {
+                    cell.classList.add('today');
+                }
+
+                const numEl = document.createElement('div');
+                numEl.className = 'day-num';
+                numEl.textContent = d;
+                cell.appendChild(numEl);
+
+                const dayEvents = events
+                    .map((e, idx) => ({...e, idx}))
+                    .filter(e => e.date === key);
+
+                dayEvents.forEach(ev => {
+                    const chip = document.createElement('div');
+                    chip.className = 'event-chip';
+                    chip.textContent = ev.start ? `${ev.start} ${ev.name}` : ev.name;
+                    chip.addEventListener('click', e => {
+                        e.stopPropagation();
+                        openModal(ev.date, ev.idx);
+                    });
+                    cell.appendChild(chip);
+                });
+
+                cell.addEventListener('click', () => openModal(key, null));
+                calDays.appendChild(cell);
+            }
+        }
+
+        function openModal(dateKey, idx) {
+            editingIndex = idx;
+            pendingDate = dateKey;
+
+            if (idx !== null) {
+                const ev = events[idx];
+                modalTitle.textContent = 'Edit Event';
+                eventNameInput.value = ev.name;
+                eventDateInput.value = ev.date;
+                eventStartInput.value = ev.start || '';
+                eventEndInput.value = ev.end || '';
+                btnDelete.style.display = 'block';
+            } else {
+                modalTitle.textContent = 'Add Event';
+                eventNameInput.value = '';
+                eventDateInput.value = dateKey;
+                eventStartInput.value = '';
+                eventEndInput.value = '';
+                btnDelete.style.display = 'none';
+            }
+
+            modal.classList.add('visible');
+            eventNameInput.focus();
+        }
+
+        function closeModal() {
+            modal.classList.remove('visible');
+            editingIndex = null;
+            pendingDate = null;
+        }
+
+        btnCancel.addEventListener('click', closeModal);
+        modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+        btnSave.addEventListener('click', () => {
+            const name = eventNameInput.value.trim();
+            if (!name) { eventNameInput.focus(); return; }
+            const entry = {
+                name,
+                date: eventDateInput.value,
+                start: eventStartInput.value,
+                end: eventEndInput.value
+            };
+            if (editingIndex !== null) {
+                events[editingIndex] = entry;
+            } else {
+                events.push(entry);
+            }
+            saveEvents();
+            closeModal();
+            renderCalendar();
+        });
+
+        btnDelete.addEventListener('click', () => {
+            if (editingIndex !== null) {
+                events.splice(editingIndex, 1);
+                saveEvents();
+                closeModal();
+                renderCalendar();
+            }
+        });
+
+        // NOTES LOGIC
+        const notesPage = document.getElementById('notes-page');
+        const notesBtn = document.getElementById('notes-btn');
+        const notesBackBtn = document.getElementById('notes-back-btn');
+        const notesList = document.getElementById('notes-list');
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const noteEditorBackdrop = document.getElementById('note-editor-backdrop');
+        const noteTitleInput = document.getElementById('note-title');
+        const noteContentInput = document.getElementById('note-content');
+        const noteBtnSave = document.getElementById('note-btn-save');
+        const noteBtnCancel = document.getElementById('note-btn-cancel');
+        const noteBtnDelete = document.getElementById('note-btn-delete');
+        const noteEditorTitle = document.getElementById('note-editor-title');
+
+        let notes = JSON.parse(localStorage.getItem('life-notes') || '[]');
+        let editingNoteIndex = null;
+
+        notesBtn.addEventListener('click', () => {
+            home.classList.add('hidden');
+            notesPage.classList.add('visible');
+            renderNotes();
+        });
+
+        notesBackBtn.addEventListener('click', () => {
+            notesPage.classList.remove('visible');
+            home.classList.remove('hidden');
+        });
+
+        newNoteBtn.addEventListener('click', () => openNoteEditor(null));
+
+        function saveNotes() {
+            localStorage.setItem('life-notes', JSON.stringify(notes));
+        }
+
+        function renderNotes() {
+            notesList.innerHTML = '';
+            notes.forEach((note, idx) => {
+                const item = document.createElement('div');
+                item.className = 'note-item';
+                item.innerHTML = `
+                    <div class="note-item-content">
+                        <div class="note-item-title">${escapeHtml(note.title)}</div>
+                        <div class="note-item-preview">${escapeHtml(note.content.substring(0, 60))}...</div>
+                    </div>
+                `;
+                item.addEventListener('click', () => openNoteEditor(idx));
+                notesList.appendChild(item);
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, c => map[c]);
+        }
+
+        function openNoteEditor(idx) {
+            editingNoteIndex = idx;
+            if (idx !== null) {
+                const note = notes[idx];
+                noteEditorTitle.textContent = 'Edit Note';
+                noteTitleInput.value = note.title;
+                noteContentInput.value = note.content;
+                noteBtnDelete.style.display = 'block';
+            } else {
+                noteEditorTitle.textContent = 'New Note';
+                noteTitleInput.value = '';
+                noteContentInput.value = '';
+                noteBtnDelete.style.display = 'none';
+            }
+            noteEditorBackdrop.classList.add('visible');
+            noteTitleInput.focus();
+        }
+
+        function closeNoteEditor() {
+            noteEditorBackdrop.classList.remove('visible');
+            editingNoteIndex = null;
+        }
+
+        noteBtnCancel.addEventListener('click', closeNoteEditor);
+        noteEditorBackdrop.addEventListener('click', e => { if (e.target === noteEditorBackdrop) closeNoteEditor(); });
+
+        noteBtnSave.addEventListener('click', () => {
+            const title = noteTitleInput.value.trim();
+            if (!title) { noteTitleInput.focus(); return; }
+            const entry = { title, content: noteContentInput.value };
+            if (editingNoteIndex !== null) {
+                notes[editingNoteIndex] = entry;
+            } else {
+                notes.push(entry);
+            }
+            saveNotes();
+            closeNoteEditor();
+            renderNotes();
+        });
+
+        noteBtnDelete.addEventListener('click', () => {
+            if (editingNoteIndex !== null) {
+                notes.splice(editingNoteIndex, 1);
+                saveNotes();
+                closeNoteEditor();
+                renderNotes();
+            }
+        });
+
+        // PONG GAME
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const gameRestartBtn = document.getElementById('game-restart-btn');
+        const gameHomeBtn = document.getElementById('game-home-btn');
+        const gameScorePlayer = document.getElementById('game-score-player');
+        const gameScoreAI = document.getElementById('game-score-ai');
+
+        const PADDLE_HEIGHT = 80;
+        const PADDLE_WIDTH = 8;
+        const BALL_SIZE = 6;
+        const WIN_SCORE = 5;
+
+        let gameState = {
+            playerY: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            aiY: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            ballX: canvas.width / 2,
+            ballY: canvas.height / 2,
+            ballVelX: 3,
+            ballVelY: 2,
+            playerScore: 0,
+            aiScore: 0,
+            gameRunning: false,
+            gameOver: false
+        };
+
+        let keyPressed = {};
+
+        function startGame() {
+            gameState = {
+                playerY: canvas.height / 2 - PADDLE_HEIGHT / 2,
+                aiY: canvas.height / 2 - PADDLE_HEIGHT / 2,
+                ballX: canvas.width / 2,
+                ballY: canvas.height / 2,
+                ballVelX: (Math.random() < 0.5 ? 1 : -1) * 3,
+                ballVelY: (Math.random() - 0.5) * 4,
+                playerScore: 0,
+                aiScore: 0,
+                gameRunning: true,
+                gameOver: false
+            };
+            gameScorePlayer.textContent = '0';
+            gameScoreAI.textContent = '0';
+            gameOverModal.classList.remove('visible');
+            gameLoop();
+        }
+
+        function updatePlayer() {
+            const speed = 5;
+            if (keyPressed['ArrowUp'] || keyPressed['w'] || keyPressed['W']) {
+                gameState.playerY -= speed;
+            }
+            if (keyPressed['ArrowDown'] || keyPressed['s'] || keyPressed['S']) {
+                gameState.playerY += speed;
+            }
+            gameState.playerY = Math.max(0, Math.min(gameState.playerY, canvas.height - PADDLE_HEIGHT));
+        }
+
+        function updateAI() {
+            const speed = 2.5;
+            const aiCenter = gameState.aiY + PADDLE_HEIGHT / 2;
+            const ballCenter = gameState.ballY;
+
+            if (aiCenter < ballCenter - 15) {
+                gameState.aiY += speed;
+            } else if (aiCenter > ballCenter + 15) {
+                gameState.aiY -= speed;
+            }
+            gameState.aiY = Math.max(0, Math.min(gameState.aiY, canvas.height - PADDLE_HEIGHT));
+        }
+
+        function updateBall() {
+            gameState.ballX += gameState.ballVelX;
+            gameState.ballY += gameState.ballVelY;
+
+            // Top/bottom collision
+            if (gameState.ballY - BALL_SIZE/2 < 0 || gameState.ballY + BALL_SIZE/2 > canvas.height) {
+                gameState.ballVelY *= -1;
+                gameState.ballY = Math.max(BALL_SIZE/2, Math.min(gameState.ballY, canvas.height - BALL_SIZE/2));
+            }
+
+            // Player paddle collision
+            if (gameState.ballX - BALL_SIZE/2 < 10 &&
+                gameState.ballY > gameState.playerY &&
+                gameState.ballY < gameState.playerY + PADDLE_HEIGHT) {
+                gameState.ballVelX = Math.abs(gameState.ballVelX);
+                gameState.ballVelY += (gameState.ballY - (gameState.playerY + PADDLE_HEIGHT/2)) * 0.1;
+                gameState.ballX = 10 + BALL_SIZE/2;
+            }
+
+            // AI paddle collision
+            if (gameState.ballX + BALL_SIZE/2 > canvas.width - 10 &&
+                gameState.ballY > gameState.aiY &&
+                gameState.ballY < gameState.aiY + PADDLE_HEIGHT) {
+                gameState.ballVelX = -Math.abs(gameState.ballVelX);
+                gameState.ballVelY += (gameState.ballY - (gameState.aiY + PADDLE_HEIGHT/2)) * 0.1;
+                gameState.ballX = canvas.width - 10 - BALL_SIZE/2;
+            }
+
+            // Scoring
+            if (gameState.ballX < -BALL_SIZE) {
+                gameState.aiScore++;
+                gameScoreAI.textContent = gameState.aiScore;
+                if (gameState.aiScore >= WIN_SCORE) {
+                    endGame(false);
+                } else {
+                    resetBall();
+                }
+            }
+            if (gameState.ballX > canvas.width + BALL_SIZE) {
+                gameState.playerScore++;
+                gameScorePlayer.textContent = gameState.playerScore;
+                if (gameState.playerScore >= WIN_SCORE) {
+                    endGame(true);
+                } else {
+                    resetBall();
+                }
+            }
+        }
+
+        function resetBall() {
+            gameState.ballX = canvas.width / 2;
+            gameState.ballY = canvas.height / 2;
+            gameState.ballVelX = (Math.random() < 0.5 ? 1 : -1) * 3;
+            gameState.ballVelY = (Math.random() - 0.5) * 4;
+        }
+
+        function drawGame() {
+            // Background
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Center line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Player paddle
+            ctx.fillStyle = '#a0c8ff';
+            ctx.fillRect(5, gameState.playerY, PADDLE_WIDTH, PADDLE_HEIGHT);
+
+            // AI paddle
+            ctx.fillStyle = '#ff6b9d';
+            ctx.fillRect(canvas.width - 5 - PADDLE_WIDTH, gameState.aiY, PADDLE_WIDTH, PADDLE_HEIGHT);
+
+            // Ball
+            ctx.fillStyle = '#ffd93d';
+            ctx.fillRect(gameState.ballX - BALL_SIZE/2, gameState.ballY - BALL_SIZE/2, BALL_SIZE, BALL_SIZE);
+        }
+
+        function endGame(playerWon) {
+            gameState.gameRunning = false;
+            gameState.gameOver = true;
+
+            const title = document.getElementById('game-result-title');
+            const text = document.getElementById('game-result-text');
+            const scorePlayer = document.getElementById('game-score-final');
+            const scoreAI = document.getElementById('game-ai-score-final');
+
+            if (playerWon) {
+                title.textContent = 'You Won!';
+                title.style.color = 'rgba(100, 255, 100, 0.90)';
+                text.textContent = 'You beat the AI!';
+            } else {
+                title.textContent = 'Game Over!';
+                title.style.color = 'rgba(255, 100, 100, 0.90)';
+                text.textContent = 'AI won this round.';
+            }
+
+            scorePlayer.textContent = gameState.playerScore;
+            scoreAI.textContent = gameState.aiScore;
+            gameOverModal.classList.add('visible');
+        }
+
+        function gameLoop() {
+            if (!gameState.gameRunning) return;
+
+            updatePlayer();
+            updateAI();
+            updateBall();
+            drawGame();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gamesBtn.addEventListener('click', () => {
+            home.classList.add('hidden');
+            gamePage.classList.add('visible');
+            startGame();
+        });
+
+        gameBackBtn.addEventListener('click', () => {
+            gamePage.classList.remove('visible');
+            home.classList.remove('hidden');
+            gameState.gameRunning = false;
+        });
+
+        gameRestartBtn.addEventListener('click', startGame);
+
+        gameHomeBtn.addEventListener('click', () => {
+            gamePage.classList.remove('visible');
+            home.classList.remove('hidden');
+            gameState.gameRunning = false;
+        });
+
+        document.addEventListener('keydown', e => {
+            keyPressed[e.key] = true;
+            if (['ArrowUp', 'ArrowDown', 'w', 'W', 's', 'S'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', e => {
+            keyPressed[e.key] = false;
+        });
+    </script>
+</body>
+</html>
